@@ -1,64 +1,72 @@
 import 'dart:developer';
-
-/**
- * @Author: Sky24n
- * @GitHub: https://github.com/Sky24n
- * @Description: Log Util.
- * @Date: 2018/9/29
- */
-
-/// Log Util.
+import 'package:flutter/cupertino.dart';
 class LogUtil {
-  static const String _defTag = 'common_utils';
-  static bool _debugMode = false; //是否是debug模式,true: log v 不输出.
-  static int _maxLen = 128;
-  static String _tagValue = _defTag;
+  static var _separator = "=";
+  static var _split =
+          "$_separator$_separator$_separator$_separator$_separator$_separator$_separator$_separator$_separator";
+  static var _title = "Yl-Log";
+  static var _isDebug = true;
+  static int _limitLength = 800;
+  static String _startLine = "$_split$_title$_split";
+  static String _endLine = "$_split$_separator$_separator$_separator$_split";
 
-  static void init({
-    String tag = _defTag,
-    bool isDebug = false,
-    int maxLen = 128,
-  }) {
-    _tagValue = tag;
-    _debugMode = isDebug;
-    _maxLen = maxLen;
+  static void init({String title, @required bool isDebug,int limitLength}) {
+    _title = title;
+    _isDebug = isDebug;
+    _limitLength = limitLength??=_limitLength;
+    _startLine = "$_split$_title$_split";
+    var endLineStr = StringBuffer();
+    var cnCharReg = RegExp("[\u4e00-\u9fa5]");
+    for (int i = 0; i < _startLine.length; i++) {
+      if (cnCharReg.stringMatch(_startLine[i]) != null) {
+        endLineStr.write(_separator);
+      }
+      endLineStr.write(_separator);
+    }
+    _endLine = endLineStr.toString();
   }
 
-  static void d(Object object, {String tag}) {
-    if (_debugMode) {
-      log('$tag d | ${object?.toString()}');
+  //仅Debug模式可见
+  static void d(dynamic obj) {
+    if (_isDebug) {
+      _log(obj.toString());
     }
   }
 
-  static void e(Object object, {String tag}) {
-    _printLog(tag, ' e ', object);
+  static void v(dynamic obj) {
+    _log(obj.toString());
   }
 
-  static void v(Object object, {String tag}) {
-    if (_debugMode) {
-      _printLog(tag, ' v ', object);
+  static void _log(String msg) {
+    print("$_startLine");
+    _logEmpyLine();
+    if(msg.length<_limitLength){
+      print(msg);
+    }else{
+      segmentationLog(msg);
     }
+    _logEmpyLine();
+    print("$_endLine");
   }
 
-  static void _printLog(String tag, String stag, Object object) {
-    String da = object.toString();
-    tag = tag ?? _tagValue;
-    if (da.length <= _maxLen) {
-      print('$tag$stag $da');
-      return;
-    }
-    print(
-        '$tag$stag — — — — — — — — — — — — — — — — st — — — — — — — — — — — — — — — —');
-    while (da.isNotEmpty) {
-      if (da.length > _maxLen) {
-        print('$tag$stag| ${da.substring(0, _maxLen)}');
-        da = da.substring(_maxLen, da.length);
-      } else {
-        print('$tag$stag| $da');
-        da = '';
+  static void segmentationLog(String msg) {
+    var outStr = StringBuffer();
+    for (var index = 0; index < msg.length; index++) {
+      outStr.write(msg[index]);
+      if (index % _limitLength == 0 && index!=0) {
+        print(outStr);
+        outStr.clear();
+        var lastIndex = index+1;
+        if(msg.length-lastIndex<_limitLength){
+          var remainderStr = msg.substring(lastIndex,msg.length);
+          print(remainderStr);
+          break;
+        }
       }
     }
-    print(
-        '$tag$stag — — — — — — — — — — — — — — — — ed — — — — — — — — — — — — — — — —');
+  }
+
+  static void _logEmpyLine(){
+    print("");
   }
 }
